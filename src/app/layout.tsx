@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Bricolage_Grotesque, Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import "./civicpulse.css";
+import { LangProvider } from "@/components/lang-provider";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -26,7 +27,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="bn" className={`${display.variable} ${body.variable}`}>
-      <body>{children}</body>
+      <body>
+        <LangProvider>{children}</LangProvider>
+      </body>
     </html>
   );
 }

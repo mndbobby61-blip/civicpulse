@@ -60,3 +60,6 @@ body::before{content:"";position:fixed;inset:-20%;z-index:-1;pointer-events:none
 .cp-cube i svg{width:34%;height:34%;fill:none;stroke:var(--g2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .cp-cube i:nth-child(1){transform:translateZ(calc(var(--s)/2))}.cp-cube i:nth-child(2){transform:rotateY(180deg) translateZ(calc(var(--s)/2))}.cp-cube i:nth-child(3){transform:rotateY(90deg) translateZ(calc(var(--s)/2))}.cp-cube i:nth-child(4){transform:rotateY(-90deg) translateZ(calc(var(--s)/2))}.cp-cube i:nth-child(5){transform:rotateX(90deg) translateZ(calc(var(--s)/2))}.cp-cube i:nth-child(6){transform:rotateX(-90deg) translateZ(calc(var(--s)/2))}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.cp-pulse path{stroke-dashoffset:0}}
+.cp-lang{display:flex;padding:3px;border-radius:999px;border:1px solid var(--cp-line);background:var(--cp-glass)}
+.cp-lang button{border:0;background:transparent;color:var(--cp-mute);padding:6px 14px;border-radius:999px;font:600 14px var(--font-body),sans-serif;cursor:pointer;transition:background .2s,color .2s}
+.cp-lang button.on{background:var(--cp-grad);color:var(--cp-on)}

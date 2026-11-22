@@ -1,12 +1,14 @@
 "use client";
 import { useRef } from "react";
 import { Icon } from "./icon";
+import { useLang } from "./lang-provider";
 
 type V = React.CSSProperties;
 const faces1 = ["bulb", "road", "drop", "trash", "build", "shield"];
 const faces2 = ["cam", "wrench", "check", "walk", "file", "clock"];
 
 export default function Hero() {
+  const { t } = useLang();
   const ref = useRef<HTMLElement>(null);
 
   function onMove(e: React.PointerEvent<HTMLElement>) {
@@ -53,26 +55,26 @@ export default function Hero() {
         </svg>
       </div>
 
-      <div className="cp-wrap">
+    <div className="cp-wrap">
         <div>
-          <div className="cp-badge"><i>নতুন</i> এখন ঢাকার ১২টি বিভাগে চালু</div>
-          <h1 className="cp-h1">শহরের প্রতিটা সমস্যার একটা <span className="cp-grad">স্পন্দন</span> আছে।</h1>
-          <p className="cp-sub">ভাঙা রাস্তা, নষ্ট বাতি, বন্ধ ড্রেন। ছবি তুলে জানান, কাজ কতদূর এগোল নিজের চোখে দেখুন।</p>
+          <div className="cp-badge"><i>{t("badge_new")}</i> {t("badge_text")}</div>
+          <h1 className="cp-h1">{t("h1a")}<span className="cp-grad">{t("h1b")}</span>{t("h1c")}</h1>
+          <p className="cp-sub">{t("sub")}</p>
           <div className="cp-row">
-            <button className="cp-btn">সমস্যা জানান</button>
-            <button className="cp-btn ghost">লাইভ ম্যাপ দেখুন</button>
+            <button className="cp-btn">{t("btn_report")}</button>
+            <button className="cp-btn ghost">{t("btn_map")}</button>
           </div>
         </div>
         <div className="cp-floatwrap">
           <div className="cp-float">
-            <div className="cp-top"><span className="cp-id">#CP-2041</span><span className="cp-chip">চলছে</span></div>
+            <div className="cp-top"><span className="cp-id">#CP-2041</span><span className="cp-chip">{t("chip")}</span></div>
             <ul className="cp-tl">
-              <li className="d">জমা হয়েছে<small>সকাল ৯:১২</small></li>
-              <li className="d">যাচাই হয়েছে<small>সকাল ১০:০৫</small></li>
-              <li className="n">কর্মী কাজ করছেন<small>রহিম, রাস্তা মেরামত দল</small></li>
-              <li>সমাধান</li>
+              <li className="d">{t("tl1")}<small>{t("tl1t")}</small></li>
+              <li className="d">{t("tl2")}<small>{t("tl2t")}</small></li>
+              <li className="n">{t("tl3")}<small>{t("tl3t")}</small></li>
+              <li>{t("tl4")}</li>
             </ul>
-            <div className="cp-notif">কর্মী ৫ মিনিটের দূরত্বে</div>
+            <div className="cp-notif">{t("notif")}</div>
           </div>
         </div>
       </div>

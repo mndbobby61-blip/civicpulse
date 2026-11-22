@@ -1,4 +1,9 @@
+"use client";
+import { useLang } from "./lang-provider";
+import LangToggle from "./lang-toggle";
+
 export default function Navbar() {
+  const { t } = useLang();
   return (
     <nav className="cp-nav">
       <div className="cp-logo">
@@ -8,12 +13,15 @@ export default function Navbar() {
         CivicPulse
       </div>
       <div className="cp-links">
-        <a href="#how">কীভাবে কাজ করে</a>
-        <a href="#map">লাইভ ম্যাপ</a>
-        <a href="#rank">র‍্যাঙ্কিং</a>
-        <a href="#faq">প্রশ্ন</a>
+        <a href="#how">{t("nav_how")}</a>
+        <a href="#map">{t("nav_map")}</a>
+        <a href="#rank">{t("nav_rank")}</a>
+        <a href="#faq">{t("nav_faq")}</a>
       </div>
-      <button className="cp-btn" style={{ padding: "10px 22px" }}>সমস্যা জানান</button>
+      <div className="cp-row" style={{ alignItems: "center", flexWrap: "nowrap" }}>
+        <LangToggle />
+        <button className="cp-btn" style={{ padding: "10px 22px" }}>{t("nav_cta")}</button>
+      </div>
     </nav>
   );
 }
