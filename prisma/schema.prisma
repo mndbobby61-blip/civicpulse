@@ -1,0 +1,245 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+  CITIZEN
+}
+
+enum IssueStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ASSIGNED
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum ImageType {
+  REPORT
+  COMPLETION
+}
+
+model User {
+  id            String       @id @default(cuid())
+  name          String
+  email         String       @unique
+  passwordHash  String
+  role          Role         @default(CITIZEN)
+  phone         String?
+  avatar        String?
+  isActive      Boolean      @default(true)
+  points        Int          @default(0)
+  departmentId  String?
+  department    Department?  @relation("DeptMembers", fields: [departmentId], references: [id])
+  managedDept   Department?  @relation("DeptManager")
+  issues        Issue[]      @relation("Reporter")
+  tasksAssigned Task[]       @relation("Assignee")
+  tasksGiven    Task[]       @relation("Assigner")
+  comments      Comment[]
+  upvotes       Upvote[]
+  feedbacks     Feedback[]
+  notifications Notification[]
+  history       StatusHistory[]
+  createdAt     DateTime     @default(now())
+
+  @@index([role])
+  @@index([departmentId])
+}
+
+model Department {
+  id          String     @id @default(cuid())
+  name        String     @unique
+  nameBn      String?
+  description String?
+  isActive    Boolean    @default(true)
+  managerId   String?    @unique
+  manager     User?      @relation("DeptManager", fields: [managerId], references: [id])
+  members     User[]     @relation("DeptMembers")
+  categories  Category[]
+  issues      Issue[]
+  createdAt   DateTime   @default(now())
+}
+
+model Category {
+  id           String      @id @default(cuid())
+  name         String      @unique
+  nameBn       String?
+  icon         String?
+  slaHours     Int         @default(72)
+  departmentId String
+  department   Department  @relation(fields: [departmentId], references: [id])
+  issues       Issue[]
+}
+
+model Issue {
+  id           String        @id @default(cuid())
+  seq          Int           @unique @default(autoincrement())
+  title        String
+  description  String
+  status       IssueStatus   @default(SUBMITTED)
+  priority     Priority      @default(MEDIUM)
+  address      String
+  areaName     String?
+  lat          Float
+  lng          Float
+  isAnonymous  Boolean       @default(false)
+  upvoteCount  Int           @default(0)
+  slaDueAt     DateTime?
+  resolvedAt   DateTime?
+  reporterId   String
+  reporter     User          @relation("Reporter", fields: [reporterId], references: [id])
+  categoryId   String
+  category     Category      @relation(fields: [categoryId], references: [id])
+  departmentId String
+  department   Department    @relation(fields: [departmentId], references: [id])
+  duplicateOfId String?
+  duplicateOf  Issue?        @relation("Dup", fields: [duplicateOfId], references: [id])
+  duplicates   Issue[]       @relation("Dup")
+  images       IssueImage[]
+  history      StatusHistory[]
+  tasks        Task[]
+  comments     Comment[]
+  upvotes      Upvote[]
+  feedbacks    Feedback[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([status])
+  @@index([departmentId, status])
+  @@index([categoryId])
+  @@index([lat, lng])
+  @@index([createdAt])
+}
+
+model IssueImage {
+  id      String    @id @default(cuid())
+  issueId String
+  issue   Issue     @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  url     String
+  type    ImageType @default(REPORT)
+}
+
+model StatusHistory {
+  id         String       @id @default(cuid())
+  issueId    String
+  issue      Issue        @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  fromStatus IssueStatus?
+  toStatus   IssueStatus
+  changedById String
+  changedBy  User         @relation(fields: [changedById], references: [id])
+  note       String?
+  createdAt  DateTime     @default(now())
+
+  @@index([issueId])
+}
+
+model Task {
+  id          String       @id @default(cuid())
+  issueId     String
+  issue       Issue        @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  assigneeId  String
+  assignee    User         @relation("Assignee", fields: [assigneeId], references: [id])
+  assignerId  String
+  assigner    User         @relation("Assigner", fields: [assignerId], references: [id])
+  deadline    DateTime?
+  status      TaskStatus   @default(PENDING)
+  notes       String?
+  completedAt DateTime?
+  reports     TaskReport[]
+  createdAt   DateTime     @default(now())
+
+  @@index([assigneeId, status])
+}
+
+model TaskReport {
+  id          String   @id @default(cuid())
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  description String
+  photos      String[]
+  createdAt   DateTime @default(now())
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  text      String
+  createdAt DateTime @default(now())
+}
+
+model Upvote {
+  userId  String
+  user    User   @relation(fields: [userId], references: [id])
+  issueId String
+  issue   Issue  @relation(fields: [issueId], references: [id], onDelete: Cascade)
+
+  @@id([userId, issueId])
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  issueId   String
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([issueId, userId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  message   String
+  issueId   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([entity, entityId])
+}
+
+model Setting {
+  key   String @id
+  value String
+}

@@ -246,3 +246,28 @@ html{scroll-padding-top:90px}
 .cp-meta .cp-ico svg{width:21px;height:21px}
 .cp-meta small{display:block;color:var(--cp-mute);font-size:13px}
 .cp-meta b{font:800 18px var(--font-display),var(--font-body),sans-serif}
+/* ===== auth + dashboard ===== */
+.cp-authpage{min-height:100vh;display:flex;flex-direction:column;padding:20px 24px 40px}
+.cp-authtop{display:flex;justify-content:space-between;align-items:center;max-width:1100px;width:100%;margin:0 auto}
+.cp-authwrap{flex:1;display:grid;place-items:center;padding:30px 0}
+.cp-authcard{width:min(440px,100%);border-radius:32px;padding:34px 30px;border:1px solid transparent;background:linear-gradient(var(--cp-glass),var(--cp-glass)) padding-box,linear-gradient(145deg,var(--g1),var(--g2),var(--g3)) border-box;backdrop-filter:blur(22px);box-shadow:0 40px 90px -30px var(--cp-glow)}
+.cp-authcard h1{font:800 32px/1.1 var(--font-display),var(--font-body),sans-serif;margin:0 0 6px}
+.cp-authcard .sub{color:var(--cp-mute);margin:0 0 22px}
+.cp-field{display:block;margin-bottom:14px}
+.cp-field span{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+.cp-field input{width:100%;padding:13px 16px;border-radius:16px;border:1px solid var(--cp-line);background:color-mix(in srgb,var(--cp-card) 80%,transparent);color:var(--cp-ink);font:400 16px var(--font-body),sans-serif;outline:none;transition:border-color .2s,box-shadow .2s}
+.cp-field input:focus{border-color:var(--g2);box-shadow:0 0 0 4px var(--cp-glow)}
+.cp-field small{color:var(--cp-mute);font-size:13px}
+.cp-err{margin:0 0 14px;padding:10px 14px;border-radius:14px;font-size:14px;color:var(--cp-red);background:color-mix(in srgb,var(--cp-red) 12%,transparent);border:1px solid color-mix(in srgb,var(--cp-red) 40%,transparent)}
+.cp-submit{width:100%;margin-top:6px}
+.cp-submit:disabled{opacity:.7;cursor:wait}
+.cp-switch{text-align:center;margin:18px 0 0;font-size:15px;color:var(--cp-mute)}
+.cp-switch a{color:var(--g2);font-weight:600}
+.cp-demo{margin-top:20px;padding-top:16px;border-top:1px solid var(--cp-line);font-size:13px;color:var(--cp-mute)}
+.cp-demo p{margin:0 0 8px;font-weight:600}
+.cp-demo code{display:block;font-family:ui-monospace,monospace;font-size:12.5px;padding:2px 0}
+.cp-dash{padding:20px 0 60px}
+.cp-dtop{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:50px}
+.cp-dtop .cp-row{align-items:center;flex-wrap:nowrap}
+.cp-dash h1{font:800 clamp(30px,5vw,52px)/1.1 var(--font-display),var(--font-body),sans-serif;margin:0 0 12px}
+.cp-role{display:inline-block;margin-bottom:34px}

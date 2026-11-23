@@ -4,6 +4,7 @@ import { useLang } from "./lang-provider";
 import LangToggle from "./lang-toggle";
 import { Icon } from "./icon";
 import type { Key } from "@/lib/dict";
+import Link from "next/link";
 
 const links: { id: string; key: Key; icon: string }[] = [
   { id: "how", key: "nav_how", icon: "wrench" },
@@ -73,7 +74,7 @@ export default function Navbar() {
       </div>
       <div className="cp-actions">
         <LangToggle />
-        <button className="cp-btn" style={{ padding: "10px 22px" }}>{t("nav_cta")}</button>
+        <Link href="/login" className="cp-btn" style={{ padding: "10px 22px" }}>{t("nav_cta")}</Link>
       </div>
 
       {/* মোবাইল: তিন-ডট বাটন */}
@@ -109,7 +110,7 @@ export default function Navbar() {
           ))}
           <div className="cp-panel-bottom">
             <LangToggle />
-            <button className="cp-btn" onClick={() => setOpen(false)}>{t("nav_cta")}</button>
+           <Link href="/login" className="cp-btn" style={{ padding: "10px 22px" }}>{t("nav_cta")}</Link>
           </div>
         </div>
       )}
