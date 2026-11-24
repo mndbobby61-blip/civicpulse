@@ -271,3 +271,5 @@ html{scroll-padding-top:90px}
 .cp-dtop .cp-row{align-items:center;flex-wrap:nowrap}
 .cp-dash h1{font:800 clamp(30px,5vw,52px)/1.1 var(--font-display),var(--font-body),sans-serif;margin:0 0 12px}
 .cp-role{display:inline-block;margin-bottom:34px}
+.cp-skel{border-radius:22px;background:linear-gradient(90deg,var(--cp-card) 25%,color-mix(in srgb,var(--g2) 14%,var(--cp-card)) 50%,var(--cp-card) 75%);background-size:200% 100%;animation:cp-skel 1.4s ease-in-out infinite}
+@keyframes cp-skel{to{background-position:-200% 0}}
