@@ -323,3 +323,10 @@ html{scroll-padding-top:90px}
 .cp-tlh{font:800 22px var(--font-display),var(--font-body),sans-serif;margin:36px 0 14px}
 .cp-tlx{max-width:640px}
 .cp-tlx li{padding:8px 0}
+/* ===== charts ===== */
+.cp-charts{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px}
+@media(max-width:860px){.cp-charts{grid-template-columns:1fr}}
+.cp-chartcard{border-radius:26px;padding:22px;border:1px solid var(--cp-line);background:var(--cp-card);min-width:0}
+.cp-chartcard.wide{grid-column:1/-1}
+.cp-chartcard h3{margin:0 0 14px;font:800 19px var(--font-display),var(--font-body),sans-serif}
+.cp-chartcard .box{height:260px;min-width:0}

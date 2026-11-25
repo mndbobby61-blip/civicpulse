@@ -1,104 +1,69 @@
 "use client";
-import Link from "next/link";
+import { useActionState, useState } from "react";
+import dynamic from "next/dynamic";
 import { useLang } from "./lang-provider";
-import { updateStatusAction, assignAction, feedbackAction } from "@/lib/issue-actions";
-import { STATUS_COLOR, PRIO_COLOR } from "@/lib/ui";
-import type { Key } from "@/lib/dict";
+import { createIssueAction, type IssueState } from "@/lib/issue-actions";
 
-export type Detail = {
-  id: string; seq: number; title: string; description: string; status: string; priority: string;
-  cat: string; catBn: string | null; dept: string; deptBn: string | null; address: string;
-  lat: number; lng: number; votes: number; slaDueAt: string | null;
-  reporter: string | null; assignee: string | null; rating: number | null;
-  history: { id: string; from: string | null; to: string; by: string; note: string | null; at: string }[];
-};
-export type Can = { review: boolean; assign: boolean; start: boolean; done: boolean; close: boolean; reopen: boolean; rate: boolean };
+const LocationPicker = dynamic(() => import("./location-picker"), {
+  ssr: false,
+  loading: () => <div className="cp-skel" style={{ height: 320 }} />,
+});
 
-function Move({ id, to, label, ghost }: { id: string; to: string; label: string; ghost?: boolean }) {
-  return (
-    <form action={updateStatusAction}>
-      <input type="hidden" name="issueId" value={id} />
-      <input type="hidden" name="to" value={to} />
-      <button className={`cp-btn ${ghost ? "ghost" : ""}`}>{label}</button>
-    </form>
-  );
-}
+type Cat = { id: string; name: string; nameBn: string | null };
 
-export default function IssueView({ d, can, staff }: { d: Detail; can: Can; staff: { id: string; name: string; load: number }[] }) {
+export default function IssueForm({ cats }: { cats: Cat[] }) {
   const { t, lang } = useLang();
-  const loc = lang === "bn" ? "bn-BD" : "en-GB";
-  const fmt = (iso: string) => new Date(iso).toLocaleString(loc, { dateStyle: "medium", timeStyle: "short" });
-  const anyAction = Object.values(can).some(Boolean);
+  const [state, action, pending] = useActionState<IssueState, FormData>(createIssueAction, {});
+  const [pos, setPos] = useState<[number, number] | null>(null);
 
-  const info: [Key, React.ReactNode][] = [
-    ["dt_cat", lang === "bn" && d.catBn ? d.catBn : d.cat],
-    ["dt_dept", lang === "bn" && d.deptBn ? d.deptBn : d.dept],
-    ["dt_prio", <b key="p" style={{ color: PRIO_COLOR[d.priority] }}>{t(`pr_${d.priority}` as Key)}</b>],
-    ["dt_sla", d.slaDueAt ? <span suppressHydrationWarning>{fmt(d.slaDueAt)}</span> : "-"],
-    ["dt_reporter", d.reporter ?? t("dt_anon")],
-    ["dt_assignee", d.assignee ?? "-"],
-    ["dt_votes", d.votes.toLocaleString(loc)],
-  ];
+  function locate() {
+    navigator.geolocation?.getCurrentPosition((p) => setPos([p.coords.latitude, p.coords.longitude]));
+  }
 
   return (
-    <>
-      <Link href="/issues" className="cp-back">{t("dt_back")}</Link>
-      <div className="cp-dhead" style={{ "--pc": STATUS_COLOR[d.status] } as React.CSSProperties}>
-        <span className="code">#CP-{d.seq.toLocaleString(loc, { useGrouping: false })}</span>
-        <span className="cp-st">{t(`st_${d.status}` as Key)}</span>
-      </div>
-      <h1 className="cp-dtitle">{d.title}</h1>
-      <p className="cp-ddesc">{d.description}</p>
-      <p className="cp-daddr">{d.address} · <a href={`https://www.openstreetmap.org/?mlat=${d.lat}&mlon=${d.lng}#map=17/${d.lat}/${d.lng}`} target="_blank" rel="noreferrer">{d.lat.toFixed(4)}, {d.lng.toFixed(4)}</a></p>
+    <form action={action} className="cp-formcard">
+      {state.error && <p className="cp-err" role="alert">{t("nf_err")}</p>}
+      <label className="cp-field">
+        <span>{t("nf_title")}</span>
+        <input name="title" required minLength={5} maxLength={120} />
+      </label>
+      <label className="cp-field">
+        <span>{t("nf_cat")}</span>
+        <select name="categoryId" required defaultValue="">
+          <option value="" disabled>-</option>
+          {cats.map((c) => (
+            <option key={c.id} value={c.id}>{lang === "bn" && c.nameBn ? c.nameBn : c.name}</option>
+          ))}
+        </select>
+      </label>
+      <label className="cp-field">
+        <span>{t("nf_desc")}</span>
+        <textarea name="description" rows={4} required minLength={10} maxLength={2000} />
+      </label>
+      <label className="cp-field">
+        <span>{t("nf_addr")}</span>
+        <input name="address" required maxLength={200} />
+      </label>
 
-      <div className="cp-dgrid">
-        <div className="cp-card cp-dbox">
-          <h3>{t("dt_act")}</h3>
-          {!anyAction && <p className="cp-mute">{t("dt_none")}</p>}
-          <div className="cp-row">
-            {can.review && <Move id={d.id} to="UNDER_REVIEW" label={t("dt_review")} />}
-            {can.start && <Move id={d.id} to="IN_PROGRESS" label={t("dt_start")} />}
-            {can.done && <Move id={d.id} to="RESOLVED" label={t("dt_done")} />}
-            {can.close && <Move id={d.id} to="CLOSED" label={t("dt_close")} />}
-            {can.reopen && <Move id={d.id} to="IN_PROGRESS" label={t("dt_reopen")} ghost />}
-          </div>
-          {can.assign && (
-            <form action={assignAction} className="cp-assign">
-              <input type="hidden" name="issueId" value={d.id} />
-              <select name="staffId" required defaultValue="">
-                <option value="" disabled>{t("dt_pick")}</option>
-                {staff.map((s) => (<option key={s.id} value={s.id}>{s.name} ({s.load})</option>))}
-              </select>
-              <button className="cp-btn">{t("dt_assign")}</button>
-            </form>
-          )}
-          {can.rate && (
-            <form action={feedbackAction} className="cp-assign">
-              <input type="hidden" name="issueId" value={d.id} />
-              <select name="rating" defaultValue={d.rating ?? 5}>
-                {[5, 4, 3, 2, 1].map((n) => (<option key={n} value={n}>{"★".repeat(n)}{"☆".repeat(5 - n)}</option>))}
-              </select>
-              <button className="cp-btn">{d.rating ? `${t("dt_rated")}: ${d.rating}` : t("dt_rate")}</button>
-            </form>
-          )}
-        </div>
-
-        <div className="cp-card cp-dbox">
-          <dl className="cp-info">
-            {info.map(([k, v]) => (<div key={k}><dt>{t(k)}</dt><dd>{v}</dd></div>))}
-          </dl>
+      <div className="cp-field">
+        <span>{t("nf_loc")}</span>
+        <LocationPicker value={pos} onChange={(a, b) => setPos([a, b])} />
+        <input type="hidden" name="lat" value={pos?.[0] ?? ""} />
+        <input type="hidden" name="lng" value={pos?.[1] ?? ""} />
+        <div className="cp-row" style={{ marginTop: 10, alignItems: "center" }}>
+          <button type="button" className="cp-btn ghost" style={{ padding: "8px 18px" }} onClick={locate}>
+            {t("nf_gps")}
+          </button>
+          {pos && <small>{pos[0].toFixed(5)}, {pos[1].toFixed(5)}</small>}
         </div>
       </div>
 
-      <h3 className="cp-tlh">{t("dt_tl")}</h3>
-      <ul className="cp-tl cp-tlx">
-        {d.history.map((h, i) => (
-          <li key={h.id} className={i === d.history.length - 1 ? "n" : "d"}>
-            {t(`st_${h.to}` as Key)}
-            <small suppressHydrationWarning>{fmt(h.at)} · {t("dt_by")} {h.by}{h.note ? ` · ${h.note}` : ""}</small>
-          </li>
-        ))}
-      </ul>
-    </>
+      <label className="cp-check">
+        <input type="checkbox" name="anon" /> {t("nf_anon")}
+      </label>
+      <button className="cp-btn cp-submit" disabled={pending}>
+        {pending ? t("auth_wait") : t("nf_submit")}
+      </button>
+    </form>
   );
 }

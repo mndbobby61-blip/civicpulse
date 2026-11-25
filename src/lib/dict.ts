@@ -207,6 +207,10 @@ const bn = {
   dt_rated: "আপনার রেটিং",
   dt_none: "এখন কোনো কাজ বাকি নেই",
   dt_tasks: "টাস্ক",
+    an_trend: "মাসভিত্তিক ইস্যু",
+  an_cat: "ক্যাটেগরি অনুযায়ী",
+  an_status: "স্ট্যাটাস অনুযায়ী",
+  an_dept: "বিভাগের গড় সমাধান সময় (ঘণ্টা)",
 } as const;
 
 export type Key = keyof typeof bn;
@@ -408,6 +412,10 @@ const en: Record<Key, string> = {
   dt_rated: "Your rating",
   dt_none: "Nothing to do right now",
   dt_tasks: "Tasks",
+    an_trend: "Issues per month",
+  an_cat: "By category",
+  an_status: "By status",
+  an_dept: "Avg. resolution time by department (hours)",
 };
 
 export const dict: Record<Lang, Record<Key, string>> = { bn, en };
