@@ -40,6 +40,10 @@ export default function DashHome({ name, role, stats }: Props) {
           </div>
         ))}
       </div>
+            <div className="cp-row" style={{ marginTop: 30 }}>
+        <Link href="/issues" className="cp-btn">{t("app_issues")}</Link>
+        {role === "CITIZEN" && <Link href="/issues/new" className="cp-btn ghost">{t("app_new")}</Link>}
+      </div>
       <p className="cp-lead" style={{ marginTop: 36 }}>{t("dash_soon")}</p>
     </main>
   );
