@@ -24,6 +24,12 @@ export async function createIssueAction(_: IssueState, fd: FormData): Promise<Is
   if (!p.success) return { error: "fields" };
   const d = p.data;
 
+    // শুধু আমাদের Cloudinary অ্যাকাউন্টের ছবির লিংক নেওয়া হয়, সর্বোচ্চ ৩টা
+  const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD;
+  const images = cloud
+    ? fd.getAll("images").map(String).filter((u) => u.startsWith(`https://res.cloudinary.com/${cloud}/`)).slice(0, 3)
+    : [];
+
   const cat = await db.category.findUnique({ where: { id: d.categoryId } });
   if (!cat) return { error: "fields" };
 
@@ -59,6 +65,11 @@ export async function createIssueAction(_: IssueState, fd: FormData): Promise<Is
     await tx.statusHistory.create({
       data: { issueId: created.id, toStatus: "SUBMITTED", changedById: user.id, note: dup ? "Linked as duplicate" : null },
     });
+        if (images.length) {
+      await tx.issueImage.createMany({ data: images.map((url) => ({ issueId: created.id, url })) });
+    }
+
+
     if (dup) await tx.issue.update({ where: { id: dup.id }, data: { upvoteCount: { increment: 1 } } });
     const dept = await tx.department.findUnique({ where: { id: cat.departmentId } });
     if (dept?.managerId) {

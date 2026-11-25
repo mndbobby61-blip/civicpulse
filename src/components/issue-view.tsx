@@ -6,7 +6,7 @@ import { STATUS_COLOR, PRIO_COLOR } from "@/lib/ui";
 import type { Key } from "@/lib/dict";
 
 export type Detail = {
-  id: string; seq: number; title: string; description: string; status: string; priority: string;
+  id: string; seq: number; images: string[]; title: string; description: string; status: string; priority: string;
   cat: string; catBn: string | null; dept: string; deptBn: string | null; address: string;
   lat: number; lng: number; votes: number; slaDueAt: string | null;
   reporter: string | null; assignee: string | null; rating: number | null;
@@ -50,6 +50,15 @@ export default function IssueView({ d, can, staff }: { d: Detail; can: Can; staf
       <h1 className="cp-dtitle">{d.title}</h1>
       <p className="cp-ddesc">{d.description}</p>
       <p className="cp-daddr">{d.address} · <a href={`https://www.openstreetmap.org/?mlat=${d.lat}&mlon=${d.lng}#map=17/${d.lat}/${d.lng}`} target="_blank" rel="noreferrer">{d.lat.toFixed(4)}, {d.lng.toFixed(4)}</a></p>
+
+            {d.images.length > 0 && (
+        <div className="cp-gallery">
+          {d.images.map((u) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={u} src={u} alt="" />
+          ))}
+        </div>
+      )}
 
       <div className="cp-dgrid">
         <div className="cp-card cp-dbox">

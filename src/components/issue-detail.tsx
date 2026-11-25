@@ -12,6 +12,7 @@ export default async function IssueDetail({ params }: { params: Promise<{ id: st
     where: { id },
     include: {
       category: true,
+      images: true,
       department: true,
       reporter: true,
       history: { include: { changedBy: true }, orderBy: { createdAt: "asc" } },
@@ -61,6 +62,7 @@ export default async function IssueDetail({ params }: { params: Promise<{ id: st
         d={{
           id: issue.id, seq: issue.seq, title: issue.title, description: issue.description,
           status: issue.status, priority: issue.priority,
+          images: issue.images.map((i) => i.url),
           cat: issue.category.name, catBn: issue.category.nameBn,
           dept: issue.department.name, deptBn: issue.department.nameBn,
           address: issue.address, lat: issue.lat, lng: issue.lng, votes: issue.upvoteCount,

@@ -11,13 +11,44 @@ const LocationPicker = dynamic(() => import("./location-picker"), {
 
 type Cat = { id: string; name: string; nameBn: string | null };
 
+const CLOUD = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD;
+const PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_PRESET;
+
 export default function IssueForm({ cats }: { cats: Cat[] }) {
   const { t, lang } = useLang();
   const [state, action, pending] = useActionState<IssueState, FormData>(createIssueAction, {});
   const [pos, setPos] = useState<[number, number] | null>(null);
+  const [imgs, setImgs] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [upErr, setUpErr] = useState(false);
 
   function locate() {
     navigator.geolocation?.getCurrentPosition((p) => setPos([p.coords.latitude, p.coords.longitude]));
+  }
+
+  async function onFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).slice(0, 3 - imgs.length);
+    e.target.value = "";
+    if (!files.length) return;
+    setBusy(true);
+    setUpErr(false);
+    try {
+      const urls: string[] = [];
+      for (const f of files) {
+        if (!f.type.startsWith("image/") || f.size > 5 * 1024 * 1024) throw new Error("bad file");
+        const body = new FormData();
+        body.append("file", f);
+        body.append("upload_preset", PRESET!);
+        const r = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD}/image/upload`, { method: "POST", body });
+        if (!r.ok) throw new Error("upload failed");
+        urls.push((await r.json()).secure_url as string);
+      }
+      setImgs((prev) => [...prev, ...urls]);
+    } catch {
+      setUpErr(true);
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -45,6 +76,27 @@ export default function IssueForm({ cats }: { cats: Cat[] }) {
         <input name="address" required maxLength={200} />
       </label>
 
+      {CLOUD && PRESET && (
+        <div className="cp-field">
+          <span>{t("up_label")}</span>
+          {imgs.length < 3 && (
+            <input type="file" accept="image/*" multiple onChange={onFiles} disabled={busy} />
+          )}
+          {busy && <small>{t("up_busy")}</small>}
+          {upErr && <p className="cp-err" role="alert" style={{ marginTop: 8 }}>{t("up_fail")}</p>}
+          <div className="cp-thumbs">
+            {imgs.map((u) => (
+              <div key={u}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={u} alt="" />
+                <button type="button" aria-label="remove" onClick={() => setImgs(imgs.filter((x) => x !== u))}>×</button>
+                <input type="hidden" name="images" value={u} />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="cp-field">
         <span>{t("nf_loc")}</span>
         <LocationPicker value={pos} onChange={(a, b) => setPos([a, b])} />
@@ -61,7 +113,7 @@ export default function IssueForm({ cats }: { cats: Cat[] }) {
       <label className="cp-check">
         <input type="checkbox" name="anon" /> {t("nf_anon")}
       </label>
-      <button className="cp-btn cp-submit" disabled={pending}>
+      <button className="cp-btn cp-submit" disabled={pending || busy}>
         {pending ? t("auth_wait") : t("nf_submit")}
       </button>
     </form>
