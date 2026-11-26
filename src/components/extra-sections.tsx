@@ -7,6 +7,7 @@ import { Icon } from "./icon";
 import ReportLink from "./report-link";
 import { Reveal, Head, Ico, Counter, tilt, untilt } from "./sections";
 import type { Key } from "@/lib/dict";
+import { STATUS_COLOR } from "@/lib/ui";
 
 type V = React.CSSProperties;
 
@@ -213,5 +214,237 @@ export function SiteFooter() {
         </div>
       </div>
     </footer>
+  );
+}
+
+/* ---------- আগে বনাম এখন ---------- */
+export function Compare() {
+  const { t } = useLang();
+  const olds: Key[] = ["old1", "old2", "old3", "old4"];
+  const news: Key[] = ["new1", "new2", "new3", "new4"];
+  return (
+    <section className="cp-sec">
+      <Reveal className="cp-wrap">
+        <Head e="cm_eyebrow" t="cm_title" l="cm_lead" />
+        <div className="cp-cmp">
+          <div className="cp-card old">
+            <h3>{t("cm_old")}</h3>
+            <ul>
+              {olds.map((k) => (<li key={k}><span className="x">×</span>{t(k)}</li>))}
+            </ul>
+          </div>
+          <div className="cp-card new">
+            <h3>{t("cm_new")}</h3>
+            <ul>
+              {news.map((k) => (<li key={k}><span className="ok"><Icon name="check" /></span>{t(k)}</li>))}
+            </ul>
+          </div>
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
+/* ---------- রিপোর্ট ট্র্যাক ---------- */
+type Tr = {
+  found: boolean; title?: string; status?: string; cat?: string; catBn?: string | null;
+  area?: string | null; history?: { to: string; at: string }[];
+};
+
+export function Track() {
+  const { t, lang } = useLang();
+  const loc = lang === "bn" ? "bn-BD" : "en-GB";
+  const [code, setCode] = useState("");
+  const [res, setRes] = useState<Tr | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(false);
+
+  async function go(e: React.FormEvent) {
+    e.preventDefault();
+    // বাংলা সংখ্যা লিখলেও কাজ করে
+    const n = code.replace(/[০-৯]/g, (d) => String("০১২৩৪৫৬৭৮৯".indexOf(d))).replace(/\D/g, "");
+    if (!n) return;
+    setBusy(true);
+    setErr(false);
+    try {
+      const r = await fetch(`/api/track?code=${n}`, { cache: "no-store" });
+      if (!r.ok && r.status !== 400) throw new Error("bad");
+      setRes(await r.json());
+    } catch {
+      setErr(true);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="cp-sec" id="track">
+      <Reveal className="cp-wrap">
+        <Head e="tr_eyebrow" t="tr_title" l="tr_lead" />
+        <form className="cp-trk" onSubmit={go}>
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            placeholder={t("tr_ph")}
+            inputMode="numeric"
+            aria-label={t("tr_title")}
+          />
+          <button className="cp-btn" disabled={busy}>{busy ? t("auth_wait") : t("tr_btn")}</button>
+        </form>
+        <p className="cp-mute" style={{ marginTop: 10 }}>{t("tr_hint")}</p>
+        {err && <p className="cp-err" role="alert" style={{ maxWidth: 560 }}>{t("tr_err")}</p>}
+        {res && !res.found && <p className="cp-err" style={{ maxWidth: 560 }}>{t("tr_none")}</p>}
+        {res?.found && res.history && (
+          <div className="cp-trkres" style={{ "--pc": STATUS_COLOR[res.status ?? ""] } as V}>
+            <div className="cp-top">
+              <b style={{ fontSize: 20 }}>{res.title}</b>
+              <span className="cp-st">{t(`st_${res.status}` as Key)}</span>
+            </div>
+            <p className="cp-mute" style={{ margin: "0 0 14px" }}>
+              {lang === "bn" && res.catBn ? res.catBn : res.cat}{res.area ? ` · ${res.area}` : ""}
+            </p>
+            <ul className="cp-tl">
+              {res.history.map((h, i) => (
+                <li key={i} className={i === res.history!.length - 1 ? "n" : "d"}>
+                  {t(`st_${h.to}` as Key)}
+                  <small>{new Date(h.at).toLocaleString(loc, { dateStyle: "medium", timeStyle: "short" })}</small>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </Reveal>
+    </section>
+  );
+}
+
+/* ---------- এলাকাভিত্তিক রিপোর্ট কার্ড ---------- */
+type Area = { name: string; total: number; solved: number };
+
+export function Areas() {
+  const { t, lang } = useLang();
+  const loc = lang === "bn" ? "bn-BD" : "en-US";
+  const [rows, setRows] = useState<Area[] | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    fetch("/api/areas")
+      .then((r) => r.json())
+      .then((d: Area[]) => live && setRows(Array.isArray(d) ? d : []))
+      .catch(() => live && setRows([]));
+    return () => { live = false; };
+  }, []);
+
+  return (
+    <section className="cp-sec">
+      <Reveal className="cp-wrap">
+        <Head e="ar_eyebrow" t="ar_title" l="ar_lead" />
+        {rows === null && (
+          <div className="cp-areas">
+            {[0, 1, 2].map((i) => (<div key={i} className="cp-skel" style={{ height: 130 }} />))}
+          </div>
+        )}
+        {rows && rows.length === 0 && <p className="cp-mute">{t("ar_empty")}</p>}
+        {rows && rows.length > 0 && (
+          <div className="cp-areas">
+            {rows.map((a) => {
+              const pct = a.total ? Math.round((a.solved / a.total) * 100) : 0;
+              return (
+                <div className="cp-card" key={a.name} onPointerMove={tilt} onPointerLeave={untilt}>
+                  <div className="cp-ring" style={{ "--pct": `${pct}%` } as V}><b>{pct.toLocaleString(loc)}%</b></div>
+                  <div>
+                    <h3>{a.name}</h3>
+                    <p>{t("ar_total")}: {a.total.toLocaleString(loc)}</p>
+                    <p>{t("ar_solved")}: {a.solved.toLocaleString(loc)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Reveal>
+    </section>
+  );
+}
+
+/* ---------- SLA প্রতিশ্রুতি ---------- */
+export function SlaPromise() {
+  const { t, lang } = useLang();
+  const loc = lang === "bn" ? "bn-BD" : "en-US";
+  const rows: [Key, number, string][] = [
+    ["c5t", 24, "trash"], ["c2t", 48, "bulb"], ["c3t", 48, "drop"],
+    ["c1t", 72, "road"], ["c4t", 96, "walk"], ["c6t", 120, "build"],
+  ];
+  return (
+    <section className="cp-sec">
+      <Reveal className="cp-wrap">
+        <Head e="sl_eyebrow" t="sl_title" l="sl_lead" />
+        <div className="cp-lb">
+          {rows.map(([k, h, icon]) => (
+            <div className="cp-card cp-lbrow" key={k}>
+              <span className="r"><Icon name="clock" /></span>
+              <b className="cp-dn"><Icon name={icon} />{t(k)}</b>
+              <div className="cp-track"><i style={{ "--w": `${(h / 120) * 100}%` } as V} /></div>
+              <b>{h.toLocaleString(loc)} {t("sl_h")}</b>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
+/* ---------- নিরাপত্তা ---------- */
+export function Security() {
+  const { t } = useLang();
+  const S: { icon: string; tt: Key; d: Key }[] = [
+    { icon: "lock", tt: "sc1t", d: "sc1d" },
+    { icon: "shield", tt: "sc2t", d: "sc2d" },
+    { icon: "clock", tt: "sc3t", d: "sc3d" },
+    { icon: "file", tt: "sc4t", d: "sc4d" },
+  ];
+  return (
+    <section className="cp-sec">
+      <Reveal className="cp-wrap">
+        <Head e="sc_eyebrow" t="sc_title" l="sc_lead" />
+        <div className="cp-four">
+          {S.map((s) => (
+            <div className="cp-card" key={s.tt} onPointerMove={tilt} onPointerLeave={untilt}>
+              <Ico name={s.icon} lg />
+              <h3>{t(s.tt)}</h3>
+              <p>{t(s.d)}</p>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
+/* ---------- যা আসছে ---------- */
+export function Roadmap() {
+  const { t } = useLang();
+  const R: { icon: string; tt: Key; d: Key }[] = [
+    { icon: "cam", tt: "rm1t", d: "rm1d" },
+    { icon: "mic", tt: "rm2t", d: "rm2d" },
+    { icon: "globe", tt: "rm3t", d: "rm3d" },
+    { icon: "chart", tt: "rm4t", d: "rm4d" },
+  ];
+  return (
+    <section className="cp-sec">
+      <Reveal className="cp-wrap">
+        <Head e="rm_eyebrow" t="rm_title" l="rm_lead" />
+        <div className="cp-four">
+          {R.map((r) => (
+            <div className="cp-card" key={r.tt} onPointerMove={tilt} onPointerLeave={untilt}>
+              <Ico name={r.icon} lg />
+              <h3>{t(r.tt)}</h3>
+              <p>{t(r.d)}</p>
+              <span className="cp-chip" style={{ color: "var(--cp-amb)" }}>{t("rm_soon")}</span>
+            </div>
+          ))}
+        </div>
+      </Reveal>
+    </section>
   );
 }

@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
+import { connection } from "next/server";
 
 export async function GET() {
+  await connection();
   const [total, resolved, good, allFb, done] = await Promise.all([
     db.issue.count(),
     db.issue.count({ where: { status: { in: ["RESOLVED", "CLOSED"] } } }),
