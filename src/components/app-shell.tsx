@@ -2,7 +2,8 @@
 import Link from "next/link";
 import { useLang } from "./lang-provider";
 import LangToggle from "./lang-toggle";
-import { logoutAction } from "@/lib/auth-actions";
+import NotifBell from "./notif-bell";
+import LogoutButton from "./logout-button";
 
 const HOME: Record<string, string> = {
   ADMIN: "/admin", MANAGER: "/manager", STAFF: "/staff", CITIZEN: "/citizen",
@@ -31,10 +32,9 @@ export default function AppShell({ role, home, children }: { role: string; home?
           </nav>
         </div>
         <div className="cp-row" style={{ alignItems: "center", flexWrap: "nowrap" }}>
+          <NotifBell />
           <LangToggle />
-          <form action={logoutAction}>
-            <button className="cp-btn ghost" style={{ padding: "10px 20px" }}>{t("logout")}</button>
-          </form>
+          <LogoutButton />
         </div>
       </div>
       {children}

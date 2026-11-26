@@ -1,5 +1,5 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useLang } from "./lang-provider";
 import LangToggle from "./lang-toggle";
@@ -21,6 +21,18 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
     isLogin ? loginAction : registerAction,
     {}
   );
+  const [next, setNext] = useState("");
+
+  useEffect(() => {
+    setNext(new URLSearchParams(window.location.search).get("next") ?? "");
+  }, []);
+
+  // সফল হলে পুরো পেজ নতুন করে খোলে, যাতে নেভবার ও নোটিফিকেশন ঠিক অবস্থায় আসে
+  useEffect(() => {
+    if (state.to) window.location.assign(state.to);
+  }, [state.to]);
+
+  const other = `${isLogin ? "/register" : "/login"}${next ? `?next=${encodeURIComponent(next)}` : ""}`;
 
   return (
     <div className="cp-authpage">
@@ -40,6 +52,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
           <p className="sub">{isLogin ? t("auth_login_sub") : t("auth_reg_sub")}</p>
 
           <form action={action}>
+            <input type="hidden" name="next" value={next} />
             {state.error && <p className="cp-err" role="alert">{t(ERR[state.error])}</p>}
             {!isLogin && (
               <label className="cp-field">
@@ -56,16 +69,14 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
               <input name="password" type="password" autoComplete={isLogin ? "current-password" : "new-password"} required />
               {!isLogin && <small>{t("auth_pass_hint")}</small>}
             </label>
-            <button className="cp-btn cp-submit" disabled={pending}>
-              {pending ? t("auth_wait") : isLogin ? t("auth_login") : t("auth_register")}
+            <button className="cp-btn cp-submit" disabled={pending || !!state.to}>
+              {pending || state.to ? t("auth_wait") : isLogin ? t("auth_login") : t("auth_register")}
             </button>
           </form>
 
           <p className="cp-switch">
             {isLogin ? t("auth_no_acc") : t("auth_has_acc")}{" "}
-            <Link href={isLogin ? "/register" : "/login"}>
-              {isLogin ? t("auth_register") : t("auth_login")}
-            </Link>
+            <Link href={other}>{isLogin ? t("auth_register") : t("auth_login")}</Link>
           </p>
 
           {isLogin && (

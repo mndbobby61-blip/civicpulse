@@ -2,6 +2,8 @@
 import { useRef } from "react";
 import { Icon } from "./icon";
 import { useLang } from "./lang-provider";
+import Link from "next/link";
+import ReportLink from "./report-link";
 
 type V = React.CSSProperties;
 const faces1 = ["bulb", "road", "drop", "trash", "build", "shield"];
@@ -61,8 +63,8 @@ export default function Hero() {
           <h1 className="cp-h1">{t("h1a")}<span className="cp-grad">{t("h1b")}</span>{t("h1c")}</h1>
           <p className="cp-sub">{t("sub")}</p>
           <div className="cp-row">
-            <button className="cp-btn">{t("btn_report")}</button>
-            <button className="cp-btn ghost">{t("btn_map")}</button>
+                        <ReportLink className="cp-btn">{t("btn_report")}</ReportLink>
+            <Link href="/map" className="cp-btn ghost">{t("btn_map")}</Link>
           </div>
         </div>
         <div className="cp-floatwrap">

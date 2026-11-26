@@ -1,14 +1,19 @@
 "use server";
-import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { db } from "./db";
 import { createSession, destroySession } from "./session";
 import { homeFor } from "./permissions";
 
-export type AuthState = { error?: "invalid" | "exists" | "fields" | "weak" };
+export type AuthState = { error?: "invalid" | "exists" | "fields" | "weak"; to?: string };
 
 const email = z.string().trim().toLowerCase().email();
+
+// শুধু নিজের সাইটের ভেতরের পথ গ্রহণ করা হয়, বাইরের লিংকে পাঠানো ঠেকাতে
+function safeNext(v: FormDataEntryValue | null) {
+  const s = String(v ?? "");
+  return s.startsWith("/") && !s.startsWith("//") && !s.startsWith("/\\") ? s : null;
+}
 
 export async function loginAction(_: AuthState, fd: FormData): Promise<AuthState> {
   const p = z.object({ email, password: z.string().min(1) }).safeParse({
@@ -22,7 +27,7 @@ export async function loginAction(_: AuthState, fd: FormData): Promise<AuthState
   if (!user || !ok) return { error: "invalid" };
 
   await createSession({ uid: user.id, role: user.role, name: user.name });
-  redirect(homeFor(user.role));
+  return { to: safeNext(fd.get("next")) ?? homeFor(user.role) };
 }
 
 export async function registerAction(_: AuthState, fd: FormData): Promise<AuthState> {
@@ -42,10 +47,9 @@ export async function registerAction(_: AuthState, fd: FormData): Promise<AuthSt
     data: { name: p.data.name, email: p.data.email, passwordHash: await bcrypt.hash(password, 10), role: "CITIZEN" },
   });
   await createSession({ uid: user.id, role: user.role, name: user.name });
-  redirect("/citizen");
+  return { to: safeNext(fd.get("next")) ?? "/citizen" };
 }
 
 export async function logoutAction() {
   await destroySession();
-  redirect("/");
 }

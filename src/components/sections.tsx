@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { useLang } from "./lang-provider";
 import { Icon } from "./icon";
 import type { Key } from "@/lib/dict";
+import Link from "next/link";
+import ReportLink from "./report-link";
 
 type V = React.CSSProperties;
 
@@ -99,7 +101,7 @@ export function Ticker() {
     <div className="cp-ticker" aria-hidden="true">
       <div>
         {items.map((k, i) => (
-          <span key={i}><b>●</b> {t(k)}</span>
+                    <Link key={i} href="/map" tabIndex={-1}><b>●</b> {t(k)}</Link>
         ))}
       </div>
     </div>
@@ -178,13 +180,13 @@ export function Categories() {
         <Head e="cat_eyebrow" t="cat_title" l="cat_lead" />
         <div className="cp-bento">
           {cats.map((c) => (
-            <div key={c.c} className={`cp-card ${c.c}`} onPointerMove={tilt} onPointerLeave={untilt}>
+                       <ReportLink key={c.c} className={`cp-card ${c.c}`} onPointerMove={tilt} onPointerLeave={untilt}>
               <Ico name={c.icon} lg />
               <div>
                 <h3>{t(c.tt)}</h3>
                 <p>{t(c.d)}</p>
               </div>
-            </div>
+            </ReportLink>
           ))}
         </div>
       </Reveal>
@@ -288,7 +290,7 @@ export function LiveMap() {
                   <small>{t(cur.s)}</small>
                 </div>
                 <span className="cp-st">{t(ST[cur.st].k)}</span>
-                <button className="cp-btn">{t("pop_btn")}</button>
+                                <Link href="/map" className="cp-btn">{t("pop_btn")}</Link>
               </div>
             )}
           </div>
@@ -514,8 +516,8 @@ export function Faq() {
           <h2 className="cp-h2">{t("cta_title")}</h2>
           <p>{t("cta_text")}</p>
           <div className="cp-row">
-            <button className="cp-btn">{t("btn_report")}</button>
-            <button className="cp-btn ghost">{t("cta_b2")}</button>
+                        <ReportLink className="cp-btn">{t("btn_report")}</ReportLink>
+            <Link href="/login" className="cp-btn ghost">{t("cta_b2")}</Link>
           </div>
         </div>
       </Reveal>
@@ -527,3 +529,4 @@ export function Footer() {
   const { t } = useLang();
   return <footer className="cp-foot">{t("foot")}</footer>;
 }
+export { tilt, untilt, Ico, Reveal, Counter, Head };

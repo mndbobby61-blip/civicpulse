@@ -3,6 +3,8 @@ import { Bricolage_Grotesque, Hind_Siliguri } from "next/font/google";
 import "./globals.css";
 import "./civicpulse.css";
 import { LangProvider } from "@/components/lang-provider";
+import { MeProvider } from "@/components/me-provider";
+import SvgSprite from "@/components/svg-sprite";
 
 const display = Bricolage_Grotesque({
   subsets: ["latin"],
@@ -20,15 +22,14 @@ export const metadata: Metadata = {
   description: "শহরের সমস্যা জানান, সমাধান ট্র্যাক করুন",
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bn" className={`${display.variable} ${body.variable}`}>
       <body>
-        <LangProvider>{children}</LangProvider>
+        <SvgSprite />
+        <LangProvider>
+          <MeProvider>{children}</MeProvider>
+        </LangProvider>
       </body>
     </html>
   );
