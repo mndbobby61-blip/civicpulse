@@ -7,9 +7,9 @@ export default async function MapPage() {
   const s = await getSession();
   const rows = await db.issue.findMany({
     orderBy: { createdAt: "desc" },
-    take: 400,
+    take: 500,
     select: {
-      id: true, seq: true, title: true, status: true, lat: true, lng: true,
+      id: true, seq: true, title: true, status: true, lat: true, lng: true, createdAt: true,
       category: { select: { name: true, nameBn: true } },
     },
   });
@@ -18,7 +18,7 @@ export default async function MapPage() {
       loggedIn={!!s}
       issues={rows.map((r) => ({
         id: r.id, seq: r.seq, title: r.title, status: r.status, lat: r.lat, lng: r.lng,
-        cat: r.category.name, catBn: r.category.nameBn,
+        cat: r.category.name, catBn: r.category.nameBn, at: r.createdAt.toISOString(),
       }))}
     />
   );

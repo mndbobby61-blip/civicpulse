@@ -1,6 +1,8 @@
 import { Suspense } from "react";
 import { requireRole } from "@/lib/permissions";
 import { db } from "@/lib/db";
+import { computeHealth } from "@/lib/health";
+import { loadScores, toProgress } from "@/lib/gamify";
 import DashHome from "./dash-home";
 import type { ChartData } from "./analytics";
 import type { Role, Prisma } from "@/generated/prisma/client";
@@ -23,7 +25,6 @@ async function loadCharts(scope: Prisma.IssueWhereInput): Promise<ChartData> {
     db.department.findMany(),
   ]);
 
-  // গত ৬ মাসের ইস্যুর সংখ্যা
   const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   const months: Record<string, number> = {};
   for (let i = 5; i >= 0; i--) {
@@ -37,7 +38,6 @@ async function loadCharts(scope: Prisma.IssueWhereInput): Promise<ChartData> {
     if (k in months) months[k]++;
   });
 
-  // বিভাগ অনুযায়ী গড় সমাধান সময় (ঘণ্টা)
   const sum: Record<string, { total: number; n: number }> = {};
   resolved.forEach((r) => {
     const h = (r.resolvedAt!.getTime() - r.createdAt.getTime()) / 3_600_000;
@@ -67,14 +67,25 @@ async function DashData({ role }: { role: Role }) {
     : role === "STAFF" ? { tasks: { some: { assigneeId: user.id } } }
     : {};
 
-  const [total, open, resolved, charts] = await Promise.all([
+  const [total, open, resolved, charts, health, scores] = await Promise.all([
     db.issue.count({ where: base }),
     db.issue.count({ where: { ...base, status: { notIn: ["RESOLVED", "CLOSED"] } } }),
     db.issue.count({ where: { ...base, status: { in: ["RESOLVED", "CLOSED"] } } }),
     role === "ADMIN" || role === "MANAGER" ? loadCharts(base) : Promise.resolve(undefined),
+    role === "ADMIN" ? computeHealth() : Promise.resolve(undefined),
+    role === "CITIZEN" ? loadScores() : Promise.resolve(undefined),
   ]);
 
-  return <DashHome name={user.name} role={user.role} stats={{ total, open, resolved }} charts={charts} />;
+  return (
+    <DashHome
+      name={user.name}
+      role={user.role}
+      stats={{ total, open, resolved }}
+      charts={charts}
+      health={health}
+      progress={scores ? toProgress(scores.get(user.id)) : undefined}
+    />
+  );
 }
 
 export default function DashPage({ role }: { role: Role }) {

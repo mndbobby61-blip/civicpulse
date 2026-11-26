@@ -3,6 +3,7 @@ import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { useLang } from "./lang-provider";
 import LangToggle from "./lang-toggle";
+import ThemeToggle from "./theme-toggle";
 import { loginAction, registerAction, type AuthState } from "@/lib/auth-actions";
 import type { Key } from "@/lib/dict";
 
@@ -43,7 +44,7 @@ export default function AuthForm({ mode }: { mode: "login" | "register" }) {
           </svg>
           CivicPulse
         </Link>
-        <LangToggle />
+        <div className="cp-row" style={{ alignItems: "center", flexWrap: "nowrap" }}><ThemeToggle /><LangToggle /></div>
       </div>
 
       <div className="cp-authwrap">

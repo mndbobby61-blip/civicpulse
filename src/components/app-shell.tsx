@@ -2,12 +2,11 @@
 import Link from "next/link";
 import { useLang } from "./lang-provider";
 import LangToggle from "./lang-toggle";
+import ThemeToggle from "./theme-toggle";
 import NotifBell from "./notif-bell";
 import LogoutButton from "./logout-button";
 
-const HOME: Record<string, string> = {
-  ADMIN: "/admin", MANAGER: "/manager", STAFF: "/staff", CITIZEN: "/citizen",
-};
+const HOME: Record<string, string> = { ADMIN: "/admin", MANAGER: "/manager", STAFF: "/staff", CITIZEN: "/citizen" };
 
 export default function AppShell({ role, home, children }: { role: string; home?: string; children: React.ReactNode }) {
   const { t } = useLang();
@@ -21,10 +20,12 @@ export default function AppShell({ role, home, children }: { role: string; home?
             <Link href="/issues">{t("app_issues")}</Link>
             {role === "CITIZEN" && <Link href="/issues/new">{t("app_new")}</Link>}
             <Link href="/map">{t("nav_mapp")}</Link>
+            <Link href="/leaderboard">{t("nav_board")}</Link>
             {role === "ADMIN" && (
               <>
                 <Link href="/admin/users">{t("nav_users")}</Link>
                 <Link href="/admin/departments">{t("nav_depts")}</Link>
+                <Link href="/admin/audit">{t("nav_audit")}</Link>
               </>
             )}
             <Link href="/notifications">{t("nav_notif")}</Link>
@@ -33,6 +34,7 @@ export default function AppShell({ role, home, children }: { role: string; home?
         </div>
         <div className="cp-row" style={{ alignItems: "center", flexWrap: "nowrap" }}>
           <NotifBell />
+          <ThemeToggle />
           <LangToggle />
           <LogoutButton />
         </div>

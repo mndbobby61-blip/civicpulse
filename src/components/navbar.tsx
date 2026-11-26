@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLang } from "./lang-provider";
 import { useMe } from "./me-provider";
 import LangToggle from "./lang-toggle";
+import ThemeToggle from "./theme-toggle";
 import NotifBell from "./notif-bell";
 import ReportLink from "./report-link";
 import { Icon } from "./icon";
@@ -71,6 +72,7 @@ export default function Navbar() {
       </div>
 
       <div className="cp-actions">
+        <ThemeToggle />
         <LangToggle />
         {me ? (
           <>
@@ -113,6 +115,7 @@ export default function Navbar() {
             </a>
           ))}
           <div className="cp-panel-bottom">
+            <ThemeToggle />
             <LangToggle />
             {me ? (
               <Link href={HOME[me.role]} className="cp-btn" onClick={() => setOpen(false)}>{t("app_home")}</Link>

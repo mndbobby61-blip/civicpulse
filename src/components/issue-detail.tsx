@@ -1,8 +1,10 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { requireRole, homeFor } from "@/lib/permissions";
+import { priorityParts } from "@/lib/priority";
 import AppShell from "./app-shell";
 import IssueView from "./issue-view";
+import Engage from "./engage";
 
 export default async function IssueDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -12,26 +14,27 @@ export default async function IssueDetail({ params }: { params: Promise<{ id: st
     where: { id },
     include: {
       category: true,
-      images: true,
       department: true,
       reporter: true,
+      images: true,
       history: { include: { changedBy: true }, orderBy: { createdAt: "asc" } },
       tasks: { include: { assignee: true }, orderBy: { createdAt: "desc" } },
       feedbacks: { where: { userId: user.id } },
+      upvotes: { where: { userId: user.id } },
+      comments: { include: { user: { select: { name: true, role: true } } }, orderBy: { createdAt: "asc" } },
     },
   });
   if (!issue) notFound();
 
   const hasTask = issue.tasks.some((t) => t.assigneeId === user.id);
   const isMgr = user.role === "ADMIN" || (user.role === "MANAGER" && issue.departmentId === user.departmentId);
-  const canSee =
-    isMgr ||
-    (user.role === "CITIZEN" && issue.reporterId === user.id) ||
-    (user.role === "STAFF" && hasTask);
+  // নাগরিকরা সবার ইস্যু দেখতে পায় (ভোট ও আলোচনার জন্য), কিন্তু বদলাতে পারে না
+  const canSee = isMgr || user.role === "CITIZEN" || (user.role === "STAFF" && hasTask);
   if (!canSee) notFound();
 
   const s = issue.status;
   const isStaff = user.role === "STAFF" && hasTask;
+  const own = user.role === "CITIZEN" && issue.reporterId === user.id;
   const can = {
     review: isMgr && s === "SUBMITTED",
     assign: isMgr && s === "UNDER_REVIEW",
@@ -39,7 +42,7 @@ export default async function IssueDetail({ params }: { params: Promise<{ id: st
     reopen: isMgr && s === "RESOLVED",
     start: isStaff && s === "ASSIGNED",
     done: isStaff && s === "IN_PROGRESS",
-    rate: user.role === "CITIZEN" && issue.reporterId === user.id && (s === "RESOLVED" || s === "CLOSED"),
+    rate: own && (s === "RESOLVED" || s === "CLOSED"),
   };
 
   let staff: { id: string; name: string; load: number }[] = [];
@@ -51,8 +54,8 @@ export default async function IssueDetail({ params }: { params: Promise<{ id: st
     staff = list.map((u) => ({ id: u.id, name: u.name, load: u._count.tasksAssigned })).sort((a, b) => a.load - b.load);
   }
 
-  // নাম গোপন রাখা ইস্যুতে রিপোর্টারের নাম শুধু ম্যানেজার/অ্যাডমিন ও নিজে দেখবে
   const showReporter = !issue.isAnonymous || isMgr || issue.reporterId === user.id;
+  const parts = priorityParts(issue, Date.now());
 
   return (
     <AppShell role={user.role} home={homeFor(user.role)}>
@@ -75,6 +78,18 @@ export default async function IssueDetail({ params }: { params: Promise<{ id: st
             note: h.note, at: h.createdAt.toISOString(),
           })),
         }}
+      />
+      <Engage
+        issueId={issue.id}
+        votes={issue.upvoteCount}
+        voted={issue.upvotes.length > 0}
+        canVote={user.role === "CITIZEN" && !own && s !== "CLOSED"}
+        own={own}
+        parts={parts}
+        comments={issue.comments.map((c) => ({
+          id: c.id, name: c.user.name, role: c.user.role, text: c.text, at: c.createdAt.toISOString(),
+          canDelete: c.userId === user.id || isMgr,
+        }))}
       />
     </AppShell>
   );

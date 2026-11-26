@@ -76,9 +76,10 @@ export default function IssueView({ d, can, staff }: { d: Detail; can: Can; staf
               <input type="hidden" name="issueId" value={d.id} />
               <select name="staffId" required defaultValue="">
                 <option value="" disabled>{t("dt_pick")}</option>
-                {staff.map((s) => (<option key={s.id} value={s.id}>{s.name} ({s.load})</option>))}
+                {staff.map((s, i) => (<option key={s.id} value={s.id}>{i === 0 ? "★ " : ""}{s.name} ({s.load})</option>))}
               </select>
-              <button className="cp-btn">{t("dt_assign")}</button>
+                <button className="cp-btn">{t("dt_assign")}</button>
+              <small className="cp-mute" style={{ width: "100%" }}>{t("dt_suggest")}</small>
             </form>
           )}
           {can.rate && (
