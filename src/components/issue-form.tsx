@@ -3,6 +3,7 @@ import { useActionState, useState } from "react";
 import dynamic from "next/dynamic";
 import { useLang } from "./lang-provider";
 import { createIssueAction, type IssueState } from "@/lib/issue-actions";
+import IssueAssistant from "./issue-assistant";
 
 const LocationPicker = dynamic(() => import("./location-picker"), {
   ssr: false,
@@ -18,6 +19,11 @@ export default function IssueForm({ cats }: { cats: Cat[] }) {
   const { t, lang } = useLang();
   const [state, action, pending] = useActionState<IssueState, FormData>(createIssueAction, {});
   const [pos, setPos] = useState<[number, number] | null>(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [address, setAddress] = useState("");
+  const [areaName, setAreaName] = useState("");
   const [imgs, setImgs] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [upErr, setUpErr] = useState(false);
@@ -54,13 +60,32 @@ export default function IssueForm({ cats }: { cats: Cat[] }) {
   return (
     <form action={action} className="cp-formcard">
       {state.error && <p className="cp-err" role="alert">{t("nf_err")}</p>}
+      <IssueAssistant
+        title={title}
+        description={description}
+        categoryId={categoryId}
+        address={address}
+        areaName={areaName}
+        imageUrl={imgs[0] ?? ""}
+        pos={pos}
+        cats={cats}
+        onApplyTitle={setTitle}
+        onApplyDescription={setDescription}
+        onApplyCategory={setCategoryId}
+        onApplyAddress={(addr, area) => {
+          setAddress(addr);
+          setAreaName(area);
+        }}
+        onApplyPos={(lat, lng) => setPos([lat, lng])}
+      />
+      <input type="hidden" name="areaName" value={areaName} />
       <label className="cp-field">
         <span>{t("nf_title")}</span>
-        <input name="title" required minLength={5} maxLength={120} />
+        <input name="title" required minLength={5} maxLength={120} value={title} onChange={(e) => setTitle(e.target.value)} />
       </label>
       <label className="cp-field">
         <span>{t("nf_cat")}</span>
-        <select name="categoryId" required defaultValue="">
+        <select name="categoryId" required value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
           <option value="" disabled>-</option>
           {cats.map((c) => (
             <option key={c.id} value={c.id}>{lang === "bn" && c.nameBn ? c.nameBn : c.name}</option>
@@ -69,11 +94,11 @@ export default function IssueForm({ cats }: { cats: Cat[] }) {
       </label>
       <label className="cp-field">
         <span>{t("nf_desc")}</span>
-        <textarea name="description" rows={4} required minLength={10} maxLength={2000} />
+        <textarea name="description" rows={4} required minLength={10} maxLength={2000} value={description} onChange={(e) => setDescription(e.target.value)} />
       </label>
       <label className="cp-field">
         <span>{t("nf_addr")}</span>
-        <input name="address" required maxLength={200} />
+        <input name="address" required maxLength={200} value={address} onChange={(e) => setAddress(e.target.value)} />
       </label>
 
       {CLOUD && PRESET && (

@@ -4,6 +4,7 @@ import {
   BarChart, Bar, PieChart, Pie, Cell,
 } from "recharts";
 import { useLang } from "./lang-provider";
+import { advT } from "@/lib/advanced-dict";
 import type { Key } from "@/lib/dict";
 
 export type ChartData = {
@@ -11,6 +12,7 @@ export type ChartData = {
   cats: { name: string; nameBn: string | null; n: number }[];
   status: { s: string; n: number }[];
   depts: { name: string; nameBn: string | null; hours: number }[];
+  workload?: { name: string; active: number; done: number }[];
 };
 
 const COLORS = ["#2de2c4", "#c8f542", "#8b7bff", "#ffb938", "#ff5d5d", "#5b6cf0"];
@@ -101,6 +103,24 @@ export default function Analytics({ d }: { d: ChartData }) {
           </ResponsiveContainer>
         </div>
       </div>
+
+      {d.workload && d.workload.length > 0 && (
+        <div className="cp-chartcard wide">
+          <h3>{advT(lang, "wl_title")}</h3>
+          <div className="box">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={d.workload}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(128,150,160,.25)" />
+                <XAxis dataKey="name" stroke="#8ea3ae" tick={{ fontSize: 11 }} />
+                <YAxis stroke="#8ea3ae" allowDecimals={false} />
+                <Tooltip {...tip} />
+                <Bar dataKey="active" name={lang === "bn" ? "চলমান" : "Active"} radius={[6, 6, 0, 0]} fill="#ffb938" stackId="a" />
+                <Bar dataKey="done" name={lang === "bn" ? "সম্পন্ন" : "Completed"} radius={[6, 6, 0, 0]} fill="#2de2c4" stackId="a" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

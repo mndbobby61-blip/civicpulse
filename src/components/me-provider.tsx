@@ -13,6 +13,27 @@ type Ctx = { me: Me; ready: boolean; items: NItem[]; unread: number; markRead: (
 const C = createContext<Ctx>({ me: null, ready: false, items: [], unread: 0, markRead: async () => {} });
 export const useMe = () => useContext(C);
 
+/** Subtle audio ping for new notifications — no external file needed */
+function playNotifSound() {
+  try {
+    const ctx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+    osc.onended = () => ctx.close();
+  } catch {
+    // Audio not available — silently skip
+  }
+}
+
 export function MeProvider({ children }: { children: React.ReactNode }) {
   const { t, lang } = useLang();
   const loc = lang === "bn" ? "bn-BD" : "en-US";
@@ -22,6 +43,13 @@ export function MeProvider({ children }: { children: React.ReactNode }) {
   const [toast, setToast] = useState<NItem[] | null>(null);
   const seen = useRef(new Set<string>());
   const unread = items.filter((i) => !i.isRead).length;
+
+  // ব্রাউজার ট্যাবের টাইটেলে unread count দেখানো
+  useEffect(() => {
+    const base = "CivicPulse";
+    if (typeof document === "undefined") return;
+    document.title = unread > 0 ? `(${unread > 99 ? "99+" : unread}) ${base}` : base;
+  }, [unread]);
 
   // কে লগইন করা আছে
   useEffect(() => {
@@ -33,8 +61,8 @@ export function MeProvider({ children }: { children: React.ReactNode }) {
     return () => { live = false; };
   }, []);
 
-  // নোটিফিকেশন আনা। যেগুলো আগে দেখানো হয়নি সেগুলোই শুধু ওপরের বার্তায় আসে
-  const poll = useCallback(async () => {
+  // নোটিফিকেশন fetch করা (SSE event এলে বা fallback poll-এ)
+  const fetchNotifs = useCallback(async () => {
     try {
       const r = await fetch("/api/notifications", { cache: "no-store" });
       if (!r.ok) return;
@@ -44,18 +72,66 @@ export function MeProvider({ children }: { children: React.ReactNode }) {
       if (fresh.length) {
         fresh.forEach((f) => seen.current.add(f.id));
         setToast(fresh);
+        // নতুন notification এলে audio beep
+        playNotifSound();
       }
     } catch {}
   }, []);
 
+  // SSE stream দিয়ে real-time sync। disconnect হলে exponential backoff reconnect
   useEffect(() => {
     if (!me) return;
-    poll();
-    const h = setInterval(() => {
-      if (document.visibilityState === "visible") poll();
-    }, 30000);
-    return () => clearInterval(h);
-  }, [me, poll]);
+    fetchNotifs(); // initial load
+
+    let es: EventSource | null = null;
+    let retryMs = 3000;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+    let fallbackInterval: ReturnType<typeof setInterval> | null = null;
+    let alive = true;
+
+    function connect() {
+      if (!alive) return;
+      es = new EventSource("/api/notifications/stream");
+
+      es.onmessage = () => {
+        // SSE event এলে full notification list refresh করো
+        if (document.visibilityState === "visible") fetchNotifs();
+        retryMs = 3000; // success — reset backoff
+      };
+
+      es.onerror = () => {
+        es?.close();
+        es = null;
+        if (!alive) return;
+        // Exponential backoff: 3s → 6s → 12s → max 60s
+        retryTimer = setTimeout(() => {
+          retryMs = Math.min(retryMs * 2, 60_000);
+          connect();
+        }, retryMs);
+      };
+    }
+
+    connect();
+
+    // Fallback: যদি SSE সম্পূর্ণ কাজ না করে (যেমন Vercel free tier), 60s poll চালু
+    fallbackInterval = setInterval(() => {
+      if (document.visibilityState === "visible" && !es) fetchNotifs();
+    }, 60_000);
+
+    // Tab visible হলে refresh করো
+    function onVisible() {
+      if (document.visibilityState === "visible") fetchNotifs();
+    }
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      alive = false;
+      es?.close();
+      if (retryTimer) clearTimeout(retryTimer);
+      if (fallbackInterval) clearInterval(fallbackInterval);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
+  }, [me, fetchNotifs]);
 
   const markRead = useCallback(async (ids?: string[]) => {
     setItems((p) => p.map((i) => (!ids || ids.includes(i.id) ? { ...i, isRead: true } : i)));

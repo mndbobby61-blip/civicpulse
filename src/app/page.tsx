@@ -1,5 +1,6 @@
 import Navbar from "@/components/navbar";
 import Hero from "@/components/hero";
+import { HomeNoticeBanner, HomeAdvancedSection } from "@/components/home-live-addons";
 import { Ticker, How, Categories, LiveMap, BeforeAfter, Leaderboard, Faq } from "@/components/sections";
 import {
   LiveStats, Features, ForDepts, Testimonials, SiteFooter,
@@ -10,6 +11,7 @@ export default function Home() {
   return (
     <>
       <Navbar />
+      <HomeNoticeBanner />
       <main>
         <Hero />
         <Ticker />
@@ -22,6 +24,7 @@ export default function Home() {
         <Track />
         <BeforeAfter />
         <Areas />
+        <HomeAdvancedSection />
         <SlaPromise />
         <ForDepts />
         <Security />

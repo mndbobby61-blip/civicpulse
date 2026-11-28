@@ -1,0 +1,487 @@
+/* Additive styles for CivicPulse advanced modules */
+.cp-adv-panel {
+  margin-top: 22px;
+  padding: 22px;
+  border-radius: 22px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-card);
+}
+.cp-adv-panel h3 {
+  margin: 0 0 12px;
+  font-size: 19px;
+}
+.cp-adv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 24px;
+}
+@media (max-width: 860px) {
+  .cp-adv-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.cp-adv-wide {
+  grid-column: 1 / -1;
+}
+
+/* Smart assistant toolbar on /issues/new */
+.cp-assist {
+  margin: 0 0 20px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px dashed color-mix(in srgb, var(--g2) 55%, var(--cp-line));
+  background: color-mix(in srgb, var(--g2) 6%, var(--cp-card));
+}
+.cp-assist-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.cp-assist-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.cp-btn-sm {
+  padding: 7px 14px;
+  font-size: 13px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-card);
+  color: var(--cp-ink);
+  cursor: pointer;
+  font-weight: 600;
+  transition: transform 0.15s, border-color 0.2s;
+}
+.cp-btn-sm:hover {
+  border-color: var(--g2);
+  transform: translateY(-1px);
+}
+.cp-btn-sm.active {
+  background: var(--cp-grad);
+  color: var(--cp-on);
+  border-color: transparent;
+}
+.cp-dup-warn {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--cp-amb);
+  background: color-mix(in srgb, var(--cp-amb) 12%, var(--cp-card));
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cp-offline-bar {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cp-red) 12%, var(--cp-card));
+  border: 1px solid var(--cp-red);
+  font-size: 14px;
+}
+
+/* Before / After interactive slider */
+.cp-ba-live {
+  position: relative;
+  width: 100%;
+  max-width: 680px;
+  aspect-ratio: 16 / 9;
+  border-radius: 18px;
+  overflow: hidden;
+  border: 1px solid var(--cp-line);
+  background: #000;
+  user-select: none;
+}
+.cp-ba-live img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cp-ba-live .after-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.cp-ba-live .divider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+.cp-ba-live input[type="range"] {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: ew-resize;
+  margin: 0;
+}
+.cp-ba-tag {
+  position: absolute;
+  top: 12px;
+  z-index: 4;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(5, 10, 22, 0.72);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+.cp-ba-tag.left {
+  left: 12px;
+}
+.cp-ba-tag.right {
+  right: 12px;
+}
+
+/* Live SSE indicator */
+.cp-live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-glass);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cp-mute);
+}
+.cp-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--g2);
+  box-shadow: 0 0 8px var(--g2);
+}
+
+/* Staff Route & Scorecard cards */
+.cp-step-badge {
+  display: grid;
+  place-items: center;
+  min-width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--cp-grad);
+  color: var(--cp-on);
+  font-weight: 800;
+  font-size: 14px;
+}
+.cp-score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+.cp-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--cp-line);
+  overflow: hidden;
+  margin-top: 6px;
+}
+.cp-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--cp-grad);
+}
+
+/* Print / PDF layout */
+@media print {
+  .cp-dtop,
+  .cp-no-print,
+  .cp-bell,
+  nav {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  .cp-adv-panel,
+  .cp-stat,
+  .cp-card {
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+}
+
+/* Interactive 3D City Twin & Home Integration */
+.cp-home-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 18px;
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--g2) 55%, var(--cp-line));
+  background: color-mix(in srgb, var(--g2) 10%, var(--cp-card));
+  font-size: 15px;
+}
+
+.cp-3d-shell {
+  border-radius: 24px;
+  border: 1px solid var(--cp-line);
+  background: radial-gradient(circle at 50% 25%, rgba(15, 181, 160, 0.14), rgba(5, 10, 22, 0.96) 72%);
+  overflow: hidden;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.45);
+}
+
+.cp-3d-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cp-3d-legend {
+  display: flex;
+  gap: 14px;
+  font-size: 13px;
+  color: #e9f2ef;
+}
+.cp-3d-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cp-3d-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.cp-3d-canvas {
+  width: 100%;
+  display: block;
+  cursor: grab;
+  touch-action: none;
+}
+.cp-3d-canvas:active {
+  cursor: grabbing;
+}
+
+.cp-3d-hud {
+  padding: 12px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(10, 20, 36, 0.72);
+  color: #e9f2ef;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  min-height: 52px;
+}
+
+/* ============================================================
+   NEW FEATURES CSS — Added 2026-11-27
+   Timeline, Citizen Stats Cards, Cluster Labels, Global Search
+   ============================================================ */
+
+/* Activity Timeline */
+.cp-timeline {
+  margin-top: 16px;
+  border-left: 2px solid var(--cp-line);
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.cp-tl-item {
+  position: relative;
+  padding: 10px 0 10px 8px;
+  border-bottom: 1px solid var(--cp-line);
+}
+.cp-tl-item:last-child {
+  border-bottom: none;
+}
+.cp-tl-dot {
+  position: absolute;
+  left: -27px;
+  top: 16px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--cp-line);
+  border: 2px solid var(--cp-bg, #fff);
+}
+.cp-tl-status .cp-tl-dot {
+  background: var(--g2);
+  box-shadow: 0 0 8px var(--g2);
+}
+.cp-tl-comment .cp-tl-dot {
+  background: var(--cp-amb, #ffb938);
+}
+.cp-tl-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+/* Citizen Stats Cards */
+.cp-ctz-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+.cp-ctz-card {
+  position: relative;
+  padding: 22px 18px;
+  border-radius: 20px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-card);
+  overflow: hidden;
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.cp-ctz-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, color-mix(in srgb, var(--accent, #2de2c4) 18%, transparent) 0%, transparent 70%);
+  pointer-events: none;
+}
+.cp-ctz-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 32px color-mix(in srgb, var(--accent, #2de2c4) 22%, transparent);
+}
+.cp-ctz-icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+  line-height: 1;
+}
+.cp-ctz-val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--accent, var(--g2));
+  line-height: 1.1;
+}
+.cp-ctz-lbl {
+  font-size: 12px;
+  color: var(--cp-mute);
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* Map Cluster Label tooltip override */
+.cp-cluster-label {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+}
+.cp-cluster-label::before {
+  display: none !important;
+}
+
+/* Global Search — in AppShell nav */
+.cp-search-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.cp-search-input {
+  padding: 7px 14px 7px 36px;
+  border-radius: 999px;
+  border: 1px solid var(--cp-line);
+  background: var(--cp-card);
+  color: var(--cp-ink);
+  font-size: 13px;
+  width: 180px;
+  transition: width 0.3s, border-color 0.2s;
+  outline: none;
+}
+.cp-search-input:focus {
+  width: 260px;
+  border-color: var(--g2);
+}
+.cp-search-icon {
+  position: absolute;
+  left: 11px;
+  color: var(--cp-mute);
+  font-size: 14px;
+  pointer-events: none;
+}
+.cp-search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 320px;
+  background: var(--cp-card);
+  border: 1px solid var(--cp-line);
+  border-radius: 18px;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.22);
+  z-index: 999;
+  overflow: hidden;
+  animation: cp-fadein 0.15s ease;
+}
+.cp-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: var(--cp-ink);
+  border-bottom: 1px solid var(--cp-line);
+  transition: background 0.15s;
+}
+.cp-search-item:last-child {
+  border-bottom: none;
+}
+.cp-search-item:hover {
+  background: color-mix(in srgb, var(--g2) 10%, var(--cp-card));
+}
+.cp-search-item b {
+  font-size: 14px;
+  display: block;
+}
+.cp-search-item small {
+  color: var(--cp-mute);
+  font-size: 12px;
+}
+.cp-search-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--cp-mute);
+  font-size: 13px;
+}
+
+@keyframes cp-fadein {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Print improvements for issue detail */
+@media print {
+  .cp-adv-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .cp-timeline {
+    page-break-inside: avoid;
+  }
+  .cp-tl-item {
+    break-inside: avoid;
+  }
+}

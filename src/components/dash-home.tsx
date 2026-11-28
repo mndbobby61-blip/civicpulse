@@ -1,6 +1,7 @@
-"use client";
+﻿"use client";
 import Link from "next/link";
 import { useLang } from "./lang-provider";
+import { advT } from "@/lib/advanced-dict";
 import AppShell from "./app-shell";
 import Analytics, { type ChartData } from "./analytics";
 import ProgressCard from "./progress-card";
@@ -16,9 +17,10 @@ type Props = {
   charts?: ChartData;
   health?: Health;
   progress?: Progress;
+  citizenExtra?: { myTotal: number; myResolved: number; avgRating: number | null; points: number };
 };
 
-export default function DashHome({ name, role, stats, charts, health, progress }: Props) {
+export default function DashHome({ name, role, stats, charts, health, progress, citizenExtra }: Props) {
   const { t, lang } = useLang();
   const loc = lang === "bn" ? "bn-BD" : "en-US";
   const cards: [Key, number][] = [
@@ -47,10 +49,47 @@ export default function DashHome({ name, role, stats, charts, health, progress }
       <div className="cp-row" style={{ marginTop: 30 }}>
         <Link href="/issues" className="cp-btn">{t("app_issues")}</Link>
         {role === "CITIZEN" && <Link href="/issues/new" className="cp-btn ghost">{t("app_new")}</Link>}
+        {role === "STAFF" && <Link href="/staff/route" className="cp-btn ghost">{advT(lang, "nav_route")}</Link>}
+        {(role === "ADMIN" || role === "MANAGER") && <Link href="/admin/reports" className="cp-btn ghost">{advT(lang, "nav_reports")}</Link>}
+        <Link href="/areas" className="cp-btn ghost">{advT(lang, "nav_areas")}</Link>
+        <Link href="/city-3d" className="cp-btn ghost">{advT(lang, "nav_city3d")}</Link>
+        <Link href="/map/zones" className="cp-btn ghost">{advT(lang, "nav_zones")}</Link>
         <Link href="/leaderboard" className="cp-btn ghost">{t("nav_board")}</Link>
       </div>
 
       {progress && <div style={{ marginTop: 34 }}><ProgressCard p={progress} /></div>}
+
+      {/* Citizen animated stats cards */}
+      {role === "CITIZEN" && citizenExtra && (
+        <div className="cp-ctz-stats" style={{ marginTop: 28 }}>
+          <div className="cp-ctz-card" style={{ "--accent": "#2de2c4" } as React.CSSProperties}>
+            <div className="cp-ctz-icon">📋</div>
+            <div className="cp-ctz-val">{citizenExtra.myTotal.toLocaleString(loc)}</div>
+            <div className="cp-ctz-lbl">{advT(lang, "ctz_my_reports")}</div>
+          </div>
+          <div className="cp-ctz-card" style={{ "--accent": "#c8f542" } as React.CSSProperties}>
+            <div className="cp-ctz-icon">✅</div>
+            <div className="cp-ctz-val">
+              {citizenExtra.myTotal > 0
+                ? `${Math.round((citizenExtra.myResolved / citizenExtra.myTotal) * 100).toLocaleString(loc)}%`
+                : "—"}
+            </div>
+            <div className="cp-ctz-lbl">{advT(lang, "ctz_resolved_pct")}</div>
+          </div>
+          <div className="cp-ctz-card" style={{ "--accent": "#ffb938" } as React.CSSProperties}>
+            <div className="cp-ctz-icon">⭐</div>
+            <div className="cp-ctz-val">
+              {citizenExtra.avgRating !== null ? citizenExtra.avgRating.toFixed(1) : "—"}
+            </div>
+            <div className="cp-ctz-lbl">{advT(lang, "ctz_avg_rating")}</div>
+          </div>
+          <div className="cp-ctz-card" style={{ "--accent": "#8b7bff" } as React.CSSProperties}>
+            <div className="cp-ctz-icon">🏅</div>
+            <div className="cp-ctz-val">{citizenExtra.points.toLocaleString(loc)}</div>
+            <div className="cp-ctz-lbl">{advT(lang, "ctz_total_points")}</div>
+          </div>
+        </div>
+      )}
 
       {health && (
         <div className="cp-health">

@@ -13,7 +13,7 @@ async function loadCharts(scope: Prisma.IssueWhereInput): Promise<ChartData> {
   since.setDate(1);
   since.setHours(0, 0, 0, 0);
 
-  const [recent, byCat, byStatus, resolved, cats, depts] = await Promise.all([
+  const [recent, byCat, byStatus, resolved, cats, depts, staffTasks] = await Promise.all([
     db.issue.findMany({ where: { ...scope, createdAt: { gte: since } }, select: { createdAt: true } }),
     db.issue.groupBy({ by: ["categoryId"], where: scope, _count: { _all: true } }),
     db.issue.groupBy({ by: ["status"], where: scope, _count: { _all: true } }),
@@ -23,6 +23,18 @@ async function loadCharts(scope: Prisma.IssueWhereInput): Promise<ChartData> {
     }),
     db.category.findMany(),
     db.department.findMany(),
+    // Staff workload data
+    db.user.findMany({
+      where: { role: "STAFF", isActive: true },
+      select: {
+        name: true,
+        tasksAssigned: {
+          where: { status: { in: ["PENDING", "IN_PROGRESS", "COMPLETED"] } },
+          select: { status: true },
+        },
+      },
+      take: 20,
+    }),
   ]);
 
   const key = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
@@ -46,6 +58,15 @@ async function loadCharts(scope: Prisma.IssueWhereInput): Promise<ChartData> {
     s.n++;
   });
 
+  const workload = staffTasks
+    .filter((u) => u.tasksAssigned.length > 0)
+    .map((u) => ({
+      name: u.name.length > 10 ? u.name.slice(0, 10) + "…" : u.name,
+      active: u.tasksAssigned.filter((t) => t.status !== "COMPLETED").length,
+      done: u.tasksAssigned.filter((t) => t.status === "COMPLETED").length,
+    }))
+    .slice(0, 15);
+
   return {
     trend: Object.entries(months).map(([m, n]) => ({ m, n })),
     cats: byCat.map((c) => {
@@ -56,6 +77,7 @@ async function loadCharts(scope: Prisma.IssueWhereInput): Promise<ChartData> {
     depts: depts
       .filter((d) => sum[d.id])
       .map((d) => ({ name: d.name, nameBn: d.nameBn, hours: Math.round(sum[d.id].total / sum[d.id].n) })),
+    workload,
   };
 }
 
@@ -67,14 +89,27 @@ async function DashData({ role }: { role: Role }) {
     : role === "STAFF" ? { tasks: { some: { assigneeId: user.id } } }
     : {};
 
-  const [total, open, resolved, charts, health, scores] = await Promise.all([
+  const [total, open, resolved, charts, health, scores, citizenFb] = await Promise.all([
     db.issue.count({ where: base }),
     db.issue.count({ where: { ...base, status: { notIn: ["RESOLVED", "CLOSED"] } } }),
     db.issue.count({ where: { ...base, status: { in: ["RESOLVED", "CLOSED"] } } }),
     role === "ADMIN" || role === "MANAGER" ? loadCharts(base) : Promise.resolve(undefined),
     role === "ADMIN" ? computeHealth() : Promise.resolve(undefined),
     role === "CITIZEN" ? loadScores() : Promise.resolve(undefined),
+    // Citizen-এর নিজস্ব রিপোর্টের গড় রেটিং fetch
+    role === "CITIZEN"
+      ? db.feedback.aggregate({ where: { issue: { reporterId: user.id } }, _avg: { rating: true } })
+      : Promise.resolve(null),
   ]);
+
+  const citizenExtra = role === "CITIZEN" && scores
+    ? {
+        myTotal: total,
+        myResolved: resolved,
+        avgRating: citizenFb?._avg?.rating ?? null,
+        points: scores.get(user.id)?.points ?? 0,
+      }
+    : undefined;
 
   return (
     <DashHome
@@ -84,6 +119,7 @@ async function DashData({ role }: { role: Role }) {
       charts={charts}
       health={health}
       progress={scores ? toProgress(scores.get(user.id)) : undefined}
+      citizenExtra={citizenExtra}
     />
   );
 }

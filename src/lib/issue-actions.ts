@@ -52,6 +52,7 @@ export async function createIssueAction(_: IssueState, fd: FormData): Promise<Is
         title: d.title,
         description: d.description,
         address: d.address,
+        areaName: String(fd.get("areaName") ?? "").trim().slice(0, 80) || null,
         lat: d.lat,
         lng: d.lng,
         categoryId: cat.id,

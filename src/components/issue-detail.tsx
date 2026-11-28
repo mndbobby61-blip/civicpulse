@@ -5,6 +5,7 @@ import { priorityParts } from "@/lib/priority";
 import AppShell from "./app-shell";
 import IssueView from "./issue-view";
 import Engage from "./engage";
+import IssueAdvancedPanels from "./issue-advanced-panels";
 
 export default async function IssueDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -18,7 +19,9 @@ export default async function IssueDetail({ params }: { params: Promise<{ id: st
       reporter: true,
       images: true,
       history: { include: { changedBy: true }, orderBy: { createdAt: "asc" } },
-      tasks: { include: { assignee: true }, orderBy: { createdAt: "desc" } },
+      tasks: { include: { assignee: true, reports: { orderBy: { createdAt: "desc" } } }, orderBy: { createdAt: "desc" } },
+      duplicateOf: { select: { id: true, seq: true, title: true } },
+      duplicates: { select: { id: true, seq: true, title: true, status: true }, orderBy: { createdAt: "asc" } },
       feedbacks: { where: { userId: user.id } },
       upvotes: { where: { userId: user.id } },
       comments: { include: { user: { select: { name: true, role: true } } }, orderBy: { createdAt: "asc" } },
@@ -56,6 +59,54 @@ export default async function IssueDetail({ params }: { params: Promise<{ id: st
 
   const showReporter = !issue.isAnonymous || isMgr || issue.reporterId === user.id;
   const parts = priorityParts(issue, Date.now());
+  const [allCats, rawNotes] = await Promise.all([
+    isMgr
+      ? db.category.findMany({ include: { department: { select: { name: true } } }, orderBy: { name: "asc" } })
+      : Promise.resolve([]),
+    isMgr || isStaff
+      ? db.auditLog.findMany({
+          where: { entity: "InternalNote", entityId: issue.id },
+          orderBy: { createdAt: "asc" },
+          take: 100,
+        })
+      : Promise.resolve([]),
+  ]);
+  const taskReports = issue.tasks.flatMap((t) =>
+    t.reports.map((r) => ({ id: r.id, description: r.description, photos: r.photos, at: r.createdAt.toISOString() }))
+  );
+  const internalNotes = rawNotes.map((n) => {
+    const m = (n.meta ?? {}) as { text?: string; authorName?: string; authorRole?: string };
+    return {
+      id: n.id,
+      text: m.text ?? "",
+      by: m.authorName ?? "Team",
+      role: m.authorRole ?? "STAFF",
+      at: n.createdAt.toISOString(),
+    };
+  });
+  const fb = issue.feedbacks[0] ?? null;
+
+  // Status history + comments merge করে timeline বানাই
+  const timeline: Array<{ id: string; type: "status" | "comment"; by: string; role: string; text: string; from?: string | null; to?: string; at: string }> = [
+    ...issue.history.map((h) => ({
+      id: h.id,
+      type: "status" as const,
+      by: h.changedBy.name,
+      role: h.changedBy.role,
+      text: h.note ?? "",
+      from: h.fromStatus ?? null,
+      to: h.toStatus,
+      at: h.createdAt.toISOString(),
+    })),
+    ...issue.comments.map((c) => ({
+      id: c.id,
+      type: "comment" as const,
+      by: c.user.name,
+      role: c.user.role,
+      text: c.text,
+      at: c.createdAt.toISOString(),
+    })),
+  ].sort((a, b) => new Date(a.at).getTime() - new Date(b.at).getTime());
 
   return (
     <AppShell role={user.role} home={homeFor(user.role)}>
@@ -90,6 +141,26 @@ export default async function IssueDetail({ params }: { params: Promise<{ id: st
           id: c.id, name: c.user.name, role: c.user.role, text: c.text, at: c.createdAt.toISOString(),
           canDelete: c.userId === user.id || isMgr,
         }))}
+      />
+      <IssueAdvancedPanels
+        issueId={issue.id}
+        currentPriority={issue.priority}
+        currentCategoryId={issue.categoryId}
+        reportImages={issue.images.filter((i) => i.type === "REPORT").map((i) => i.url)}
+        completionImages={issue.images.filter((i) => i.type === "COMPLETION").map((i) => i.url)}
+        taskReports={taskReports}
+        duplicateOf={issue.duplicateOf}
+        duplicates={issue.duplicates}
+        categories={allCats.map((c) => ({ id: c.id, name: c.name, nameBn: c.nameBn, deptName: c.department.name }))}
+        feedback={fb ? { rating: fb.rating, comment: fb.comment } : null}
+        internalNotes={internalNotes}
+        timeline={timeline}
+        perms={{
+          canStaffReport: (isStaff || user.role === "ADMIN") && issue.tasks.length > 0 && s !== "CLOSED",
+          canTriage: isMgr && s !== "CLOSED",
+          canReview: can.rate,
+          canSeeInternal: isMgr || isStaff,
+        }}
       />
     </AppShell>
   );
