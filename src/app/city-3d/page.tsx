@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import AppShell from "@/components/app-shell";
-import City3DTwin, { type Area3DNode } from "@/components/city-3d-twin";
+import City3DClientWrapper from "@/components/city-3d-client";
+import type { Area3DNode } from "@/components/city-3d-twin";
 
 async function City3DData() {
   await connection();
@@ -45,7 +45,7 @@ async function City3DData() {
       <p className="cp-lead" style={{ marginBottom: 20 }}>
         Interactive 3D visualization of live Dhaka area reports, resolution towers, and active hotspots.
       </p>
-      <City3DTwin areas={areas} height={540} />
+      <City3DClientWrapper areas={areas} height={540} />
     </>
   );
 

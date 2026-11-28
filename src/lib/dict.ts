@@ -433,6 +433,7 @@ const bn = {
   au_by: "কে করেছেন",
   au_sys: "সিস্টেম",
   dt_suggest: "★ = সবচেয়ে কম কাজের চাপ",
+  rm_soon: "শীঘ্রই আসছে",
 } as const;
 
 export type Key = keyof typeof bn;
@@ -860,6 +861,7 @@ const en: Record<Key, string> = {
   au_by: "By",
   au_sys: "System",
   dt_suggest: "★ = lightest workload",
+  rm_soon: "Coming soon",
   
 };
 
