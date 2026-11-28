@@ -3,7 +3,12 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLang } from "./lang-provider";
 import { advT } from "@/lib/advanced-dict";
-import City3DTwin, { type Area3DNode } from "./city-3d-twin";
+import dynamic from "next/dynamic";
+import type { Area3DNode } from "./city-3d-twin";
+
+// Canvas API (requestAnimationFrame, devicePixelRatio) browser-only —
+// dynamic ssr:false দিলে Vercel prerender-এ crash করবে না
+const City3DTwin = dynamic(() => import("./city-3d-twin"), { ssr: false });
 
 type Highlights = {
   banner: { bn: string; en: string };
