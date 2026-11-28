@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
 import AppShell from "./app-shell";
-import MapView from "./map-view";
+import MapView from "./map-view-loader";
 
 export default async function MapPage() {
   const s = await getSession();
